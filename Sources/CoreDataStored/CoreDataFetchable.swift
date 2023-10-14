@@ -1,0 +1,187 @@
+//  Created by Axel Ancona Esselmann on 9/15/23.
+//
+
+import Foundation
+import CoreData
+
+public protocol CoreDataFetchable {
+    associatedtype CoreDataEntity
+        where CoreDataEntity: NSManagedObject
+
+    init(_ entity: CoreDataEntity) throws
+}
+
+public extension CoreDataFetchable {
+    static func fetchAll<T>(
+        in context: NSManagedObjectContext,
+        sortedBy keyPath: KeyPath<CoreDataEntity, T>? = nil,
+        ascending: Bool = true
+    ) throws -> [Self] {
+        guard let request: NSFetchRequest<CoreDataEntity> = NSManagedObject.fetchRequest() as? NSFetchRequest<CoreDataEntity> else {
+            throw CoreDataError.couldNotCastFetchRequest
+        }
+        request.entity = NSEntityDescription.entity(
+            forEntityName: "\(CoreDataEntity.self)",
+            in: context
+        )
+        if let keyPath = keyPath {
+            request.sortDescriptors = [NSSortDescriptor(keyPath: keyPath, ascending: ascending)]
+        }
+        let entities = try context.fetch(request)
+        return try entities.map { try Self($0) }
+    }
+
+    static func fetchEntities(
+        withIds ids: Set<UUID>,
+        in context: NSManagedObjectContext
+    ) throws -> [CoreDataEntity] {
+        guard let request: NSFetchRequest<CoreDataEntity> = NSManagedObject.fetchRequest() as? NSFetchRequest<CoreDataEntity> else {
+            throw CoreDataError.couldNotCastFetchRequest
+        }
+        request.entity = NSEntityDescription.entity(
+            forEntityName: "\(CoreDataEntity.self)",
+            in: context
+        )
+        request.predicate = NSPredicate(format: "(id IN %@)", ids as CVarArg)
+        return try context.fetch(request)
+    }
+
+    static func fetchEntity(
+        withId id: UUID,
+        in context: NSManagedObjectContext
+    ) throws -> CoreDataEntity {
+        guard let request: NSFetchRequest<CoreDataEntity> = NSManagedObject.fetchRequest() as? NSFetchRequest<CoreDataEntity> else {
+            throw CoreDataError.couldNotCastFetchRequest
+        }
+        request.entity = NSEntityDescription.entity(
+            forEntityName: "\(CoreDataEntity.self)",
+            in: context
+        )
+        request.predicate = NSPredicate(format: "(id == %@)", id as CVarArg)
+        guard let entity = (try context.fetch(request)).first else {
+            throw CoreDataError.noResultReturned
+        }
+        return entity
+    }
+
+    init(
+        id: UUID,
+        in context: NSManagedObjectContext
+    ) throws {
+        guard let request = NSManagedObject.fetchRequest() as? NSFetchRequest<CoreDataEntity> else {
+            throw CoreDataError.couldNotCastFetchRequest
+        }
+        request.entity = NSEntityDescription.entity(
+            forEntityName: "\(CoreDataEntity.self)",
+            in: context
+        )
+        request.predicate = NSPredicate(format: "(id = %@)", id as CVarArg)
+        request.fetchLimit = 1
+        guard let entity: CoreDataEntity = try context.fetch(request).first else {
+            throw CoreDataError.noResultReturned
+        }
+        try self.init(entity)
+    }
+
+    init(
+        propertyName: String,
+        value: CVarArg,
+        in context: NSManagedObjectContext
+    ) throws {
+        guard let request = NSManagedObject.fetchRequest() as? NSFetchRequest<CoreDataEntity> else {
+            throw CoreDataError.couldNotCastFetchRequest
+        }
+        request.entity = NSEntityDescription.entity(
+            forEntityName: "\(CoreDataEntity.self)",
+            in: context
+        )
+        request.predicate = NSPredicate(format: "(\(propertyName) = %@)", value)
+        request.fetchLimit = 1
+        guard let entity: CoreDataEntity = try context.fetch(request).first else {
+            throw CoreDataError.noResultReturned
+        }
+        try self.init(entity)
+    }
+
+    init(
+        with attributes: [CoreDataAttribute],
+        in context: NSManagedObjectContext
+    ) throws {
+        guard let request = NSManagedObject.fetchRequest() as? NSFetchRequest<CoreDataEntity> else {
+            throw CoreDataError.couldNotCastFetchRequest
+        }
+        request.entity = NSEntityDescription.entity(
+            forEntityName: "\(CoreDataEntity.self)",
+            in: context
+        )
+        let predicateCompound = NSCompoundPredicate(
+            type: .and,
+            subpredicates: attributes.map {
+                NSPredicate(format: "(\($0.name) = %@)", $0.value)
+            }
+        )
+        request.predicate = predicateCompound
+        request.fetchLimit = 1
+        guard let entity: CoreDataEntity = try context.fetch(request).first else {
+            throw CoreDataError.noResultReturned
+        }
+        try self.init(entity)
+    }
+
+    init?(
+        optionalId: UUID?,
+        in context: NSManagedObjectContext
+    ) throws {
+        guard let id = optionalId else {
+            return nil
+        }
+        try self.init(id: id, in: context)
+    }
+
+    @discardableResult
+    static func delete(
+        id: UUID,
+        in context: NSManagedObjectContext,
+        save: Bool = true
+    ) throws -> Self {
+        let entity = try fetchEntity(withId: id, in: context)
+        let element = try Self(entity)
+        context.delete(entity)
+        if save {
+            try context.save()
+        }
+        return element
+    }
+
+    @discardableResult
+    static func update<T>(
+        itemWithId id: UUID,
+        in context: NSManagedObjectContext,
+        set keyPath: KeyPath<CoreDataEntity, T>,
+        to value: T,
+        save: Bool = true
+    ) throws -> Self {
+        let entity = try Self.fetchEntity(withId: id, in: context)
+        entity.setValue(value, forKey: keyPath.propertyAsString)
+        if save {
+            try context.save()
+        }
+        return try Self(entity)
+    }
+
+    @discardableResult
+    static func toggle(
+        _ keyPath: KeyPath<CoreDataEntity, Bool>,
+        itemWithId id: UUID,
+        in context: NSManagedObjectContext,
+        save: Bool = true
+    ) throws -> Self {
+        let entity = try Self.fetchEntity(withId: id, in: context)
+        let current = entity[keyPath: keyPath]
+        entity.setValue(!current, forKey: keyPath.propertyAsString)
+        if save {
+            try context.save()
+        }
+        return try Self(entity)
+    }
+}
