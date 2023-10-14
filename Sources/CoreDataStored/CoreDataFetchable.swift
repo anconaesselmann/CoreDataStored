@@ -12,9 +12,21 @@ public protocol CoreDataFetchable {
 }
 
 public extension CoreDataFetchable {
+    static func fetchAll(in context: NSManagedObjectContext) throws -> [Self] {
+        guard let request: NSFetchRequest<CoreDataEntity> = NSManagedObject.fetchRequest() as? NSFetchRequest<CoreDataEntity> else {
+            throw CoreDataError.couldNotCastFetchRequest
+        }
+        request.entity = NSEntityDescription.entity(
+            forEntityName: "\(CoreDataEntity.self)",
+            in: context
+        )
+        let entities = try context.fetch(request)
+        return try entities.map { try Self($0) }
+    }
+
     static func fetchAll<T>(
         in context: NSManagedObjectContext,
-        sortedBy keyPath: KeyPath<CoreDataEntity, T>? = nil,
+        sortedBy keyPath: KeyPath<CoreDataEntity, T>,
         ascending: Bool = true
     ) throws -> [Self] {
         guard let request: NSFetchRequest<CoreDataEntity> = NSManagedObject.fetchRequest() as? NSFetchRequest<CoreDataEntity> else {
@@ -24,9 +36,7 @@ public extension CoreDataFetchable {
             forEntityName: "\(CoreDataEntity.self)",
             in: context
         )
-        if let keyPath = keyPath {
-            request.sortDescriptors = [NSSortDescriptor(keyPath: keyPath, ascending: ascending)]
-        }
+        request.sortDescriptors = [NSSortDescriptor(keyPath: keyPath, ascending: ascending)]
         let entities = try context.fetch(request)
         return try entities.map { try Self($0) }
     }
@@ -76,51 +86,6 @@ public extension CoreDataFetchable {
             in: context
         )
         request.predicate = NSPredicate(format: "(id = %@)", id as CVarArg)
-        request.fetchLimit = 1
-        guard let entity: CoreDataEntity = try context.fetch(request).first else {
-            throw CoreDataError.noResultReturned
-        }
-        try self.init(entity)
-    }
-
-    init(
-        propertyName: String,
-        value: CVarArg,
-        in context: NSManagedObjectContext
-    ) throws {
-        guard let request = NSManagedObject.fetchRequest() as? NSFetchRequest<CoreDataEntity> else {
-            throw CoreDataError.couldNotCastFetchRequest
-        }
-        request.entity = NSEntityDescription.entity(
-            forEntityName: "\(CoreDataEntity.self)",
-            in: context
-        )
-        request.predicate = NSPredicate(format: "(\(propertyName) = %@)", value)
-        request.fetchLimit = 1
-        guard let entity: CoreDataEntity = try context.fetch(request).first else {
-            throw CoreDataError.noResultReturned
-        }
-        try self.init(entity)
-    }
-
-    init(
-        with attributes: [CoreDataAttribute],
-        in context: NSManagedObjectContext
-    ) throws {
-        guard let request = NSManagedObject.fetchRequest() as? NSFetchRequest<CoreDataEntity> else {
-            throw CoreDataError.couldNotCastFetchRequest
-        }
-        request.entity = NSEntityDescription.entity(
-            forEntityName: "\(CoreDataEntity.self)",
-            in: context
-        )
-        let predicateCompound = NSCompoundPredicate(
-            type: .and,
-            subpredicates: attributes.map {
-                NSPredicate(format: "(\($0.name) = %@)", $0.value)
-            }
-        )
-        request.predicate = predicateCompound
         request.fetchLimit = 1
         guard let entity: CoreDataEntity = try context.fetch(request).first else {
             throw CoreDataError.noResultReturned
