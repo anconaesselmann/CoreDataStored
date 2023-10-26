@@ -1,7 +1,6 @@
 //  Created by Axel Ancona Esselmann on 9/15/23.
 //
 
-import Foundation
 import CoreData
 
 public extension NSManagedObject {
