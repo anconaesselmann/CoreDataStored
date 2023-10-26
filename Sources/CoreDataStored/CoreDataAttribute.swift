@@ -16,10 +16,6 @@ internal struct CoreDataAttribute {
         self.init(name: keyPath.propertyAsString, value: value)
     }
 
-    internal static func name(_ name: String, value: CVarArg) -> Self {
-        .init(name: name, value: value)
-    }
-
     internal static func keyPath<Entity, T>(_ keyPath: KeyPath<Entity, T>, value: CVarArg) -> Self {
         .init(keyPath: keyPath, value: value)
     }
