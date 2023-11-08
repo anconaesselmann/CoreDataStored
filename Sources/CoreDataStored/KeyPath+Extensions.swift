@@ -5,6 +5,6 @@ import Foundation
 
 extension KeyPath {
     var propertyAsString: String {
-        "\(self)".components(separatedBy: ".").last ?? ""
+        NSExpression(forKeyPath: self).keyPath
     }
 }
