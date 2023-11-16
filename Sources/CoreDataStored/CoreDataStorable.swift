@@ -30,18 +30,16 @@ extension CoreDataStorable where Self: CoreDataFetchable, Self: Identifiable, ID
     @discardableResult
     func update(in context: NSManagedObjectContext) async throws -> CoreDataEntity {
         try await context.perform {
-            var existing = try Self.fetchEntity(withId: id, in: context)
-            let updated = self.entity(existing: existing, in: context)
+            let entity = try self.update(in: context)
             try context.save()
-            return updated
+            return entity
         }
     }
 
     @discardableResult
     func createOrUpdate(in context: NSManagedObjectContext) async throws -> CoreDataEntity {
         try await context.perform {
-            let existing = try? Self.fetchEntity(withId: id, in: context)
-            let entity = self.entity(existing: existing, in: context)
+            let entity = try self.createOrUpdate(in: context)
             try context.save()
             return entity
         }
@@ -50,10 +48,7 @@ extension CoreDataStorable where Self: CoreDataFetchable, Self: Identifiable, ID
     @discardableResult
     func createIfNew(in context: NSManagedObjectContext) async throws -> CoreDataEntity {
         try await context.perform {
-            if let existing = try? Self.fetchEntity(withId: id, in: context) {
-                return existing
-            }
-            let entity = self.entity(existing: nil, in: context)
+            let entity = try self.createIfNew(in: context)
             try context.save()
             return entity
         }
