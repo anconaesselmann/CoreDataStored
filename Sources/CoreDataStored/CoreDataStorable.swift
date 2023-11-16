@@ -26,7 +26,7 @@ public extension CoreDataStorable {
     }
 }
 
-extension CoreDataStorable where Self: CoreDataFetchable, Self: Identifiable, ID == UUID {
+public extension CoreDataStorable where Self: CoreDataFetchable, Self: Identifiable, ID == UUID {
     @discardableResult
     func update(in context: NSManagedObjectContext) async throws -> CoreDataEntity {
         try await context.perform {
