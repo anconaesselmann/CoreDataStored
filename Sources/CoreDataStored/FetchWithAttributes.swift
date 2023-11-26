@@ -80,7 +80,14 @@ fileprivate extension CoreDataFetchable {
         let predicateCompound = NSCompoundPredicate(
             type: .and,
             subpredicates: attributes.map {
-                NSPredicate(format: "(\($0.name) = %@)", $0.value)
+                let insertPlaceholder: String
+                switch $0.value {
+                case is Int, is Int8, is Int16:
+                    insertPlaceholder = "%i"
+                default:
+                    insertPlaceholder = "%@"
+                }
+                return NSPredicate(format: "(\($0.name) = \(insertPlaceholder))", $0.value)
             }
         )
         request.predicate = predicateCompound
