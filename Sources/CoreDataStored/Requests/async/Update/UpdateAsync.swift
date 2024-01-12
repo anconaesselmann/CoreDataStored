@@ -27,7 +27,7 @@ public extension CoreDataStorable where Self: CoreDataFetchable, Self: Identifia
 public extension CoreDataFetchable where Self: Identifiable, Self.ID == UUID, Self: CoreDataStorable {
 
     @discardableResult
-    func createOrUpdate_async<T0>(
+    func createOrUpdate<T0>(
         in context: NSManagedObjectContext,
         where a0: Attribute<T0>
     ) async throws -> CoreDataEntity {
