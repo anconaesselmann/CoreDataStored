@@ -30,8 +30,11 @@ public extension CoreDataFetchable where Self: Identifiable, Self.ID == UUID, Se
         where a0: Attribute<T0>
     ) throws -> CoreDataEntity {
         do {
-            let existing = try (Self.fetch(in: context, where: a0) as? [CoreDataEntity])?.first
-            return self.entity(existing: existing, in: context)
+            let existing = try Self.fetchEntities(in: context, where: a0)
+            if existing.count > 1 {
+                assertionFailure("More than one item retrieved")
+            }
+            return self.entity(existing: existing.first, in: context)
         } catch CoreDataError.noResultReturned {
             return self.entity(existing: nil, in: context)
         }
@@ -45,13 +48,16 @@ public extension CoreDataFetchable where Self: Identifiable, Self.ID == UUID, Se
         ascending: Bool = true
     ) throws -> CoreDataEntity {
         do {
-            let existing = try (Self.fetch(
+            let existing = try Self.fetchEntities(
                 in: context,
                 where: a0,
                 sortedBy: keyPath,
                 ascending: ascending
-            ) as? [CoreDataEntity])?.first
-            return self.entity(existing: existing, in: context)
+            )
+            if existing.count > 1 {
+                assertionFailure("More than one item retrieved")
+            }
+            return self.entity(existing: existing.first, in: context)
         } catch CoreDataError.noResultReturned {
             return self.entity(existing: nil, in: context)
         }
