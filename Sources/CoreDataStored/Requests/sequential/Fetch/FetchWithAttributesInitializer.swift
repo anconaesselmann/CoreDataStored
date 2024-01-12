@@ -65,7 +65,7 @@ public extension CoreDataFetchable {
     }
 }
 
-fileprivate extension CoreDataFetchable {
+internal extension CoreDataFetchable {
     init(
         in context: NSManagedObjectContext,
         where attributes: [CoreDataAttribute]

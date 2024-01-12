@@ -1,4 +1,4 @@
-//  Created by Axel Ancona Esselmann on 10/25/23.
+//  Created by Axel Ancona Esselmann on 10/13/23.
 //
 
 import CoreData
@@ -6,13 +6,29 @@ import CoreData
 public extension CoreDataFetchable {
 
     @discardableResult
+    static func update<T>(
+        itemWithId id: UUID,
+        in context: NSManagedObjectContext,
+        set keyPath: KeyPath<CoreDataEntity, T>,
+        to value: T,
+        save: Bool = true
+    ) throws -> Self {
+        let entity = try Self.fetchEntity(withId: id, in: context)
+        entity.setValue(value, forKey: keyPath.propertyAsString)
+        if save {
+            try context.save()
+        }
+        return try Self(entity)
+    }
+
+    @discardableResult
     static func update<T0>(
         itemWithId id: UUID,
         set a0: Attribute<T0>,
         in context: NSManagedObjectContext,
         save: Bool = true
-    ) async throws -> Self {
-        try await update(
+    ) throws -> Self {
+        try update(
             itemWithId: id,
             with: [.keyPath(a0.0, value: a0.1)],
             in: context,
@@ -27,8 +43,8 @@ public extension CoreDataFetchable {
           _ a1: Attribute<T1>,
         in context: NSManagedObjectContext,
         save: Bool = true
-    ) async throws -> Self {
-        try await  update(
+    ) throws -> Self {
+        try update(
             itemWithId: id,
             with: [
                 .keyPath(a0.0, value: a0.1),
@@ -47,8 +63,8 @@ public extension CoreDataFetchable {
           _ a2: Attribute<T2>,
         in context: NSManagedObjectContext,
         save: Bool = true
-    ) async throws -> Self {
-        try await  update(
+    ) throws -> Self {
+        try update(
             itemWithId: id,
             with: [
                 .keyPath(a0.0, value: a0.1),
@@ -69,8 +85,8 @@ public extension CoreDataFetchable {
           _ a3: Attribute<T3>,
         in context: NSManagedObjectContext,
         save: Bool = true
-    ) async throws -> Self {
-        try await  update(
+    ) throws -> Self {
+        try update(
             itemWithId: id,
             with: [
                 .keyPath(a0.0, value: a0.1),
@@ -93,8 +109,8 @@ public extension CoreDataFetchable {
           _ a4: Attribute<T4>,
         in context: NSManagedObjectContext,
         save: Bool = true
-    ) async throws -> Self {
-        try await  update(
+    ) throws -> Self {
+        try update(
             itemWithId: id,
             with: [
                 .keyPath(a0.0, value: a0.1),
@@ -119,8 +135,8 @@ public extension CoreDataFetchable {
           _ a5: Attribute<T5>,
         in context: NSManagedObjectContext,
         save: Bool = true
-    ) async throws -> Self {
-        try await  update(
+    ) throws -> Self {
+        try update(
             itemWithId: id,
             with: [
                 .keyPath(a0.0, value: a0.1),
@@ -143,16 +159,14 @@ internal extension CoreDataFetchable {
         with attributes: [CoreDataAttribute],
         in context: NSManagedObjectContext,
         save: Bool = true
-    ) async throws -> Self {
-        try await context.perform {
-            let entity = try Self.fetchEntity(withId: id, in: context)
-            for attribute in attributes {
-                entity.setValue(attribute.value, forKey: attribute.name)
-            }
-            if save {
-                try context.save()
-            }
-            return try Self(entity)
+    ) throws -> Self {
+        let entity = try Self.fetchEntity(withId: id, in: context)
+        for attribute in attributes {
+            entity.setValue(attribute.value, forKey: attribute.name)
         }
+        if save {
+            try context.save()
+        }
+        return try Self(entity)
     }
 }

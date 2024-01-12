@@ -80,7 +80,7 @@ public extension CoreDataFetchable {
     }
 }
 
-fileprivate extension CoreDataFetchable {
+internal extension CoreDataFetchable {
     static func fetch<T>(
         in context: NSManagedObjectContext,
         where attributes: [CoreDataAttribute],
