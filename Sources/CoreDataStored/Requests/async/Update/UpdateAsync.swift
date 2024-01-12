@@ -23,3 +23,28 @@ public extension CoreDataStorable where Self: CoreDataFetchable, Self: Identifia
         }
     }
 }
+
+public extension CoreDataFetchable where Self: Identifiable, Self.ID == UUID, Self: CoreDataStorable {
+
+    @discardableResult
+    func createOrUpdate_async<T0>(
+        in context: NSManagedObjectContext,
+        where a0: Attribute<T0>
+    ) async throws -> CoreDataEntity {
+        try await context.perform {
+            try self.createOrUpdate(in: context, where: a0)
+        }
+    }
+
+    @discardableResult
+    func createOrUpdate<SortT, T0>(
+        in context: NSManagedObjectContext,
+        where a0: Attribute<T0>,
+        sortedBy keyPath: KP<SortT>,
+        ascending: Bool = true
+    ) async throws -> CoreDataEntity {
+        try await context.perform {
+            try createOrUpdate(in: context, where: a0, sortedBy: keyPath, ascending: ascending)
+        }
+    }
+}

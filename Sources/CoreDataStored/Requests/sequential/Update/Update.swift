@@ -23,4 +23,37 @@ public extension CoreDataFetchable where Self: Identifiable, Self.ID == UUID, Se
             return self.entity(existing: nil, in: context)
         }
     }
+
+    @discardableResult
+    func createOrUpdate<T0>(
+        in context: NSManagedObjectContext,
+        where a0: Attribute<T0>
+    ) throws -> CoreDataEntity {
+        do {
+            let existing = try (Self.fetch(in: context, where: a0) as? [CoreDataEntity])?.first
+            return self.entity(existing: existing, in: context)
+        } catch CoreDataError.noResultReturned {
+            return self.entity(existing: nil, in: context)
+        }
+    }
+
+    @discardableResult
+    func createOrUpdate<SortT, T0>(
+        in context: NSManagedObjectContext,
+        where a0: Attribute<T0>,
+        sortedBy keyPath: KP<SortT>,
+        ascending: Bool = true
+    ) throws -> CoreDataEntity {
+        do {
+            let existing = try (Self.fetch(
+                in: context,
+                where: a0,
+                sortedBy: keyPath,
+                ascending: ascending
+            ) as? [CoreDataEntity])?.first
+            return self.entity(existing: existing, in: context)
+        } catch CoreDataError.noResultReturned {
+            return self.entity(existing: nil, in: context)
+        }
+    }
 }
