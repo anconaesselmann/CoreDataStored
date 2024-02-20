@@ -9,13 +9,15 @@ public extension CoreDataFetchable {
         in context: NSManagedObjectContext,
         where a0: Attribute<T0>,
         sortedBy keyPath: KP<SortT>,
-        ascending: Bool = true
+        ascending: Bool = true,
+        fetchLimit: Int? = nil
     ) async throws -> [Self] {
         try await fetch(
             in: context,
             where: [.keyPath(a0.0, value: a0.1)],
             sortedBy: keyPath,
-            ascending: ascending
+            ascending: ascending,
+            fetchLimit: fetchLimit
         )
     }
 
@@ -24,7 +26,8 @@ public extension CoreDataFetchable {
         where a0: Attribute<T0>,
             _ a1: Attribute<T1>,
         sortedBy keyPath: KP<SortT>,
-        ascending: Bool = true
+        ascending: Bool = true,
+        fetchLimit: Int? = nil
     ) async throws -> [Self] {
         try await fetch(
             in: context,
@@ -33,7 +36,8 @@ public extension CoreDataFetchable {
                 .keyPath(a1.0, value: a1.1)
             ],
             sortedBy: keyPath,
-            ascending: ascending
+            ascending: ascending,
+            fetchLimit: fetchLimit
         )
     }
 
@@ -43,7 +47,8 @@ public extension CoreDataFetchable {
             _ a1: Attribute<T1>,
             _ a2: Attribute<T2>,
         sortedBy keyPath: KP<SortT>,
-        ascending: Bool = true
+        ascending: Bool = true,
+        fetchLimit: Int? = nil
     ) async throws -> [Self] {
         try await fetch(
             in: context,
@@ -53,7 +58,8 @@ public extension CoreDataFetchable {
                 .keyPath(a2.0, value: a2.1)
             ],
             sortedBy: keyPath,
-            ascending: ascending
+            ascending: ascending,
+            fetchLimit: fetchLimit
         )
     }
 
@@ -64,7 +70,8 @@ public extension CoreDataFetchable {
             _ a2: Attribute<T2>,
             _ a3: Attribute<T3>,
         sortedBy keyPath: KP<SortT>,
-        ascending: Bool = true
+        ascending: Bool = true,
+        fetchLimit: Int? = nil
     ) async throws -> [Self] {
         try await fetch(
             in: context,
@@ -75,7 +82,8 @@ public extension CoreDataFetchable {
                 .keyPath(a3.0, value: a3.1)
             ],
             sortedBy: keyPath,
-            ascending: ascending
+            ascending: ascending,
+            fetchLimit: fetchLimit
         )
     }
 }
@@ -85,7 +93,8 @@ fileprivate extension CoreDataFetchable {
         in context: NSManagedObjectContext,
         where attributes: [CoreDataAttribute],
         sortedBy keyPath: KP<T>,
-        ascending: Bool = true
+        ascending: Bool = true,
+        fetchLimit: Int? = nil
     ) async throws -> [Self] {
         try await context.perform {
             guard let request: NSFetchRequest<CoreDataEntity> = NSManagedObject.fetchRequest() as? NSFetchRequest<CoreDataEntity> else {
@@ -101,6 +110,9 @@ fileprivate extension CoreDataFetchable {
                     NSPredicate(format: "(\($0.name) = %@)", $0.value as CVarArg)
                 }
             )
+            if let fetchLimit = fetchLimit {
+                request.fetchLimit = fetchLimit
+            }
             request.predicate = predicateCompound
             request.sortDescriptors = [NSSortDescriptor(keyPath: keyPath, ascending: ascending)]
             let entities = try context.fetch(request)
