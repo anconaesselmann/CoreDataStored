@@ -22,10 +22,16 @@ public extension CoreDataFetchable {
             try Self(optionalId: optionalId, in: context)
         }
     }
-    
+
     static func fetchAll(in context: NSManagedObjectContext) async throws -> [Self] {
         try await context.perform {
             try Self.fetchAll(in: context)
+        }
+    }
+
+    static func fetchAllEntities(in context: NSManagedObjectContext) async throws -> [CoreDataEntity] {
+        try await context.perform {
+            try Self.fetchAllEntities(in: context)
         }
     }
 

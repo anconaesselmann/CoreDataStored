@@ -46,6 +46,17 @@ public extension CoreDataFetchable {
         return try entities.map { try Self($0) }
     }
 
+    static func fetchAllEntities(in context: NSManagedObjectContext) throws -> [CoreDataEntity] {
+        guard let request: NSFetchRequest<CoreDataEntity> = NSManagedObject.fetchRequest() as? NSFetchRequest<CoreDataEntity> else {
+            throw CoreDataError.couldNotCastFetchRequest
+        }
+        request.entity = NSEntityDescription.entity(
+            forEntityName: "\(CoreDataEntity.self)",
+            in: context
+        )
+        return try context.fetch(request)
+    }
+
     static func fetchAll<T>(
         in context: NSManagedObjectContext,
         sortedBy keyPath: KeyPath<CoreDataEntity, T>,
