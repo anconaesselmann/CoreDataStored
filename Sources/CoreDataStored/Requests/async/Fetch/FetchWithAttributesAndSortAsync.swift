@@ -107,7 +107,20 @@ fileprivate extension CoreDataFetchable {
             let predicateCompound = NSCompoundPredicate(
                 type: .and,
                 subpredicates: attributes.map {
-                    NSPredicate(format: "(\($0.name) = %@)", $0.value as CVarArg)
+                    let insertPlaceholder: String
+                    switch $0.value {
+                    case is Int, is Int8, is Int16:
+                        insertPlaceholder = "%i"
+                    default:
+                        insertPlaceholder = "%@"
+                    }
+                    let value: CVarArg
+                    if let bool = $0.value as? Bool {
+                        value = NSNumber(value: bool)
+                    } else {
+                        value = $0.value as CVarArg
+                    }
+                    return NSPredicate(format: "(\($0.name) = \(insertPlaceholder))", value)
                 }
             )
             if let fetchLimit = fetchLimit {

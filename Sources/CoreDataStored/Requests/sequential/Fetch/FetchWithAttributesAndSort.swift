@@ -19,6 +19,48 @@ public extension CoreDataFetchable {
             fetchLimit: fetchLimit
         )
     }
+
+    static func fetchEntities<SortT, T0, T1>(
+        in context: NSManagedObjectContext,
+        where a0: Attribute<T0>,
+            _ a1: Attribute<T1>,
+        sortedBy keyPath: KP<SortT>,
+        ascending: Bool = true,
+        fetchLimit: Int? = nil
+    ) throws -> [CoreDataEntity] {
+        try fetchEntities(
+            in: context,
+            where: [
+                .keyPath(a0.0, value: a0.1),
+                .keyPath(a1.0, value: a1.1)
+            ],
+            sortedBy: keyPath,
+            ascending: ascending,
+            fetchLimit: fetchLimit
+        )
+    }
+
+    static func fetchEntities<SortT, T0, T1, T2>(
+        in context: NSManagedObjectContext,
+        where a0: Attribute<T0>,
+            _ a1: Attribute<T1>,
+            _ a2: Attribute<T2>,
+        sortedBy keyPath: KP<SortT>,
+        ascending: Bool = true,
+        fetchLimit: Int? = nil
+    ) throws -> [CoreDataEntity] {
+        try fetchEntities(
+            in: context,
+            where: [
+                .keyPath(a0.0, value: a0.1),
+                .keyPath(a1.0, value: a1.1),
+                .keyPath(a2.0, value: a2.1)
+            ],
+            sortedBy: keyPath,
+            ascending: ascending,
+            fetchLimit: fetchLimit
+        )
+    }
 }
 
 public extension CoreDataFetchable {
@@ -153,7 +195,20 @@ internal extension CoreDataFetchable {
         let predicateCompound = NSCompoundPredicate(
             type: .and,
             subpredicates: attributes.map {
-                NSPredicate(format: "(\($0.name) = %@)", $0.value)
+                let insertPlaceholder: String
+                switch $0.value {
+                case is Int, is Int8, is Int16:
+                    insertPlaceholder = "%i"
+                default:
+                    insertPlaceholder = "%@"
+                }
+                let value: CVarArg
+                if let bool = $0.value as? Bool {
+                    value = NSNumber(value: bool)
+                } else {
+                    value = $0.value as CVarArg
+                }
+                return NSPredicate(format: "(\($0.name) = \(insertPlaceholder))", value)
             }
         )
         if let fetchLimit = fetchLimit {

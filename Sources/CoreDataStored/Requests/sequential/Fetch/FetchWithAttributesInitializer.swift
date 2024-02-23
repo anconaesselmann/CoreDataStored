@@ -87,7 +87,13 @@ internal extension CoreDataFetchable {
                 default:
                     insertPlaceholder = "%@"
                 }
-                return NSPredicate(format: "(\($0.name) = \(insertPlaceholder))", $0.value)
+                let value: CVarArg
+                if let bool = $0.value as? Bool {
+                    value = NSNumber(value: bool)
+                } else {
+                    value = $0.value as CVarArg
+                }
+                return NSPredicate(format: "(\($0.name) = \(insertPlaceholder))", value)
             }
         )
         request.predicate = predicateCompound
